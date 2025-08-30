@@ -8,6 +8,9 @@ const {ButtonBuilder, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder, R
 const fs = require("node:fs")
 const maintainers = require("./maintainers.json")
 
+const lastUpdatedFilePath = "./last_updated.json"
+const lastUpdated = require(lastUpdatedFilePath)
+
 let active_layer = ""
 
 class potatobot {
@@ -92,7 +95,7 @@ class potatobot {
             }
         }
 
-        const rest = new REST({ version: '10' }).setToken(this.token[0]);
+        const rest = new REST({ version: '10' }).setToken(this.token["Bot"]);
 
         try {
             rest.put(
@@ -341,6 +344,78 @@ class potatobot {
     }
 
     /**
+     * Automatically sends a message in the Mod Updates channel whenever one of my mods gets updated
+     */
+    async modUpdater() {
+        const server = await this.fetchserver;
+        const channel = await server.channels.fetch("1411241734817714186");
+
+        //Get all my projects
+        const projectsListFetch = await fetch("https://api.modrinth.com/v2/user/MXe82l5E/projects", {
+            method: "GET",
+            headers: {
+                "Authorization": this.token["Modrinth"]
+            }
+        })
+        const projectsList = await projectsListFetch.json();
+
+
+        //Read when each project was last updated
+        fs.readFile(lastUpdatedFilePath, 'utf-8', async (err, data) => {
+            if (err) {
+                console.error("Error: ", err)
+                return
+            }
+
+            let shouldWrite = false
+            let jsonData = JSON.parse(data)
+
+            //For each project in the projects list
+            for (let i = 0; i < projectsList.length; i++) {
+                //If it should update
+                if (i >= lastUpdated.length || jsonData[projectsList[i]["id"]] !== projectsList[i]["updated"]) {
+                    let numOfVersions = projectsList[i]["versions"]
+                    let latestVersionID = projectsList[i]["versions"][numOfVersions.length - 1]
+
+                    //Get the latest version
+                    let latestVersionFetch = await fetch("https://api.modrinth.com/v2/version/" + latestVersionID, {
+                        method: "GET",
+                        headers: {
+                            "Authorization": this.token["Modrinth"]
+                        }
+                    })
+                    let latestVersion = await latestVersionFetch.json();
+
+                    //Send the message
+                    let embed = new EmbedBuilder()
+                        .setTitle(latestVersion["name"])
+                        .setDescription("Changelog:\n" + latestVersion["changelog"])
+                        .setColor(projectsList[i]["color"])
+                        .setThumbnail(projectsList[i]["icon_url"])
+                    let msg = await channel.send({
+                        content: "<@&1411245664821575680> \n" + "https://modrinth.com/mod/" + projectsList[i]["slug"] + "/version/" + latestVersionID,
+                        embeds: [embed],
+                        ephemeral: true
+                    })
+                    await msg.crosspost()
+                    console.log("Created new project update message")
+
+                    //Update the file
+                    jsonData[projectsList[i]["id"]] = projectsList[i]["updated"]
+                    shouldWrite = true;
+                }
+            }
+
+            if (shouldWrite) {
+                let updatedData = JSON.stringify(jsonData);
+                await fs.writeFile("./last_updated.json", updatedData, 'utf-8', err => {
+                    console.log("Updated the last_updated.json file")
+                })
+            }
+        })
+    }
+
+    /**
      * Checks if a message contains ANY phrase in config.main_filter
      * @param {Message} message 
      * @returns boolean
@@ -361,10 +436,10 @@ class potatobot {
      * @param {string} token 
      */
     async getSubscriberCount() {
-        const server = await bot.client.guilds.fetch("1251520688569974914");
+        const server = await this.fetchserver;
         const channel = await server.channels.fetch("1382364642499887195");
 
-        const result = await fetch('https://www.googleapis.com/youtube/v3/channels?key='+this.token[1]+'&part=statistics&forHandle=SpacePotatoee');
+        const result = await fetch('https://www.googleapis.com/youtube/v3/channels?key='+this.token["YouTube"]+'&part=statistics&forHandle=SpacePotatoee');
         const text = await result.json();
 
         let subCount = text['items'][0]['statistics']['subscriberCount'];

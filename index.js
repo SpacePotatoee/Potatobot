@@ -17,24 +17,25 @@ const {potatobot} = require("./potatobot"); const pb = new potatobot(token,confi
 
 const client = new Client(
     {intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.MessageContent, 
-        GatewayIntentBits.GuildMessages, 
-        GatewayIntentBits.DirectMessages, 
-        GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.GuildMembers
-    ],
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.MessageContent,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.GuildMessageReactions,
+            GatewayIntentBits.GuildMembers,
+            GatewayIntentBits.GuildVoiceStates
+        ],
     partials: [Partials.Reaction]}
 )
 module.exports.client = client
 
-pb.loadCommands(token[0])
+pb.loadCommands(token["Bot"])
 
 //Welcome
 pb.welcomer()
 
 //#region Message Detection
-client.on("messageCreate", async (msg) => {
+client.on(Events.MessageCreate, async (msg) => {
     if (msg.author.bot || msg.channel.type !== ChannelType.DM) return
     console.log("someone sent a dm")
     if (msg.author.id.includes("484144133917769749") || msg.author.id.includes("520961867368103936")) {
@@ -47,7 +48,7 @@ client.on("messageCreate", async (msg) => {
     }
 })
 
-client.on("messageCreate", async (message) => {
+client.on(Events.MessageCreate, async (message) => {
     
     if (message.author.bot) return
     if (message.author.id.includes("721640105307275315") && message.content.toLowerCase().includes("linux")) {
@@ -70,7 +71,7 @@ client.on("messageCreate", async (message) => {
     }
 })
 
-client.on("messageCreate", async (msg) => {
+client.on(Events.MessageCreate, async (msg) => {
     if (msg.author.bot) return
     if ((msg.content.includes("<@1360807782001148134>")||msg.content.toLowerCase().includes("potatobot")) && (msg.content.toLowerCase().includes("sucks")||msg.content.toLowerCase().includes("i hate")||msg.content.toLowerCase().includes("is bad")||msg.content.toLowerCase().includes("is ass")||msg.content.toLowerCase().includes("beat our child")||msg.content.toLowerCase().includes("disown"))) {
         msg.react("😢")
@@ -142,7 +143,7 @@ client.on(Events.MessageReactionAdd, async (reaction,user) => {
 //#endregion Message Detection
 
 //#region Error Logging
-client.on("error", (e) => {
+client.on(Events.Error, (e) => {
     console.log(e)
     pb.sendError("error",e,0xFF0000)
 })
@@ -152,8 +153,8 @@ process.on("uncaughtException", (e) => {
 })
 //#endregion Error Logging
 
-client.login(token[0])
-client.on("ready", async () => {
+client.login(token["Bot"])
+client.on(Events.ClientReady, async () => {
     console.log("started");
     const last_commit = await pb.getBasicCommitInfo("SpacePotatoee","PotatoBot")
     pb.sendError(
@@ -169,7 +170,11 @@ client.on("ready", async () => {
     setInterval(()=>(pb.setRandomStatus()),300_000) // Set a random status every 5 minutes
 
     pb.getSubscriberCount()
-    setInterval(()=>(pb.getSubscriberCount()),3_600_000)  // Update the subscriber counter every hour
+    pb.modUpdater()
+    setInterval(()=> {
+        pb.getSubscriberCount()
+        pb.modUpdater()
+    },3_600_000)  // Update the subscriber counter and update tracker every hour
 })
 
 module.exports.client = client
