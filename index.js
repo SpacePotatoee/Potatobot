@@ -73,6 +73,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 client.on(Events.MessageCreate, async (msg) => {
     if (msg.author.bot) return
+    pb.spambotChecker(msg)
     if ((msg.content.includes("<@1360807782001148134>")||msg.content.toLowerCase().includes("potatobot")) && (msg.content.toLowerCase().includes("sucks")||msg.content.toLowerCase().includes("i hate")||msg.content.toLowerCase().includes("is bad")||msg.content.toLowerCase().includes("is ass")||msg.content.toLowerCase().includes("beat our child")||msg.content.toLowerCase().includes("disown"))) {
         msg.react("😢")
         msg.react("🫃")

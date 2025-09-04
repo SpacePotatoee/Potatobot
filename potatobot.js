@@ -20,8 +20,8 @@ class potatobot {
         this.config = config
     }
     
-    get fetchserver() {
-        return bot.client.guilds.fetch("1251520688569974914")
+    async fetchServer() {
+        return await bot.client.guilds.fetch("1141085447536263252")
     }
 
     /**
@@ -528,6 +528,19 @@ class potatobot {
 
     get checkMaintenanceStatus() {
         return JSON.parse(fs.readFileSync("./maintenancetoggle.json")).maintenance
+    }
+
+    spambotChecker(msg) {
+            if (msg.channel.id !== this.config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
+            console.log(`Message sent in honeypot by ${msg.author.username}`)
+    
+            msg.member.ban({
+                reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
+                deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
+            }).then(async (member) => {
+                (await this.fetchServer()).members.unban(member.id) 
+            })
+    
     }
 
 }
