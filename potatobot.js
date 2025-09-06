@@ -347,7 +347,7 @@ class potatobot {
      * Automatically sends a message in the Mod Updates channel whenever one of my mods gets updated
      */
     async modUpdater() {
-        const server = await this.fetchserver;
+        const server = await this.fetchServer();
         const channel = await server.channels.fetch("1411241734817714186");
 
         //Get all my projects
@@ -436,7 +436,7 @@ class potatobot {
      * @param {string} token 
      */
     async getSubscriberCount() {
-        const server = await this.fetchserver;
+        const server = await this.fetchServer();
         const channel = await server.channels.fetch("1382364642499887195");
 
         const result = await fetch('https://www.googleapis.com/youtube/v3/channels?key='+this.token["YouTube"]+'&part=statistics&forHandle=SpacePotatoee');
