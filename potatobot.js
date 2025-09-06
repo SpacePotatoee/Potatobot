@@ -21,7 +21,7 @@ class potatobot {
     }
     
     async fetchServer() {
-        return await bot.client.guilds.fetch("1141085447536263252")
+        return await bot.client.guilds.fetch("1251520688569974914")
     }
 
     /**
