@@ -1,5 +1,5 @@
 {
-    "honeypot_channel":"1413217339058684036",
+    "honeypot_channel":"1413228729567809697",
     "links": {
         "embed_image": "https://cdn.discordapp.com/attachments/1361390588523712512/1367576285789814864/831ad01659612e42dc2adfe6bcf00b3a4a5515f4_96.png?ex=6815162a&is=6813c4aa&hm=033e5957be17f3f9c777d5b8523a7d4b4e66233115937e755ea8ffe2ad00c3b2&",
         "wiki":"https://github.com/SpacePotatoee/MinecraftFoundFootage/wiki",
@@ -59,10 +59,18 @@
                     "fields": [
                         {
                             "name": "What do I need to install?",
-                            "value": "Required dependencies for Minecraft 1.20.1:\n• Fabric API (any version)\n• Simple Voice Chat (1.20.1-2.4.32 or later)\n• GeckoLib (4.4.9 or later)\n\nMake sure you're using Fabric loader, NOT Forge/Neoforge!"
+                            "value": "Required dependencies for Minecraft 1.20.1:\n• Fabric API (any version)\n• Simple Voice Chat (1.20.1-2.5.36)\n• GeckoLib (4.4.9 or later)\n\nMake sure you're using Fabric loader, NOT Forge/Neoforge!"
                         }
                     ]
                 },
+                "voicechat": {
+                    "fields": [
+                        {
+                            "name": "Voicechat doesnt work! What do I do!?",
+                            "value": "A fix that has worked for some people is setting the port in the config to -1, or by downloading this specific version https://cdn.modrinth.com/data/9eGKb6K1/versions/8vW48Tnj/voicechat-fabric-1.20.1-2.5.36.jar"
+                        }
+                    ]
+                }
                 "graphics": {
                     "fields": [
                         {
