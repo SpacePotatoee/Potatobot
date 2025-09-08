@@ -44,7 +44,7 @@ class potatobot { // TODO: Clean all of this and make it more modular, like put 
         for (var i = 0; i < Object.keys(faq_layer).length; i++) {
             buffer.push({
                 label:(faq_layer[ Object.keys(faq_layer) [i] ].fields[0].name),
-                value:(Object.keys(faq_layer)[i].toString()) 
+                value:(Object.keys(faq_layer)[i].toString()) //! fix this mess, why is it so bad. actually cannot read what any of this does, couldve made it into seperate little functions or a class
             })
         }
 
@@ -246,8 +246,8 @@ class potatobot { // TODO: Clean all of this and make it more modular, like put 
                     let field_path = ".fields"
                     let image_path = ".image"
                     if ((active_layer !== "") && selection !== active_layer) {
-                        field_path = ".questions."+selection+".fields"
-                        image_path = ".questions."+selection+".image"
+                        field_path = ".questions."+selection+".fields" //! dont touch this or else the entire bot will break
+                        image_path = ".questions."+selection+".image"  // i do not even know how this works anymore, just if we need to change the scheme for anything then its gonna suck
                     }
                     console.log([field_path, image_path])
                     //console.log(Object.keys(eval("live_config.faq."+selection+".questions.fields")))
@@ -485,45 +485,47 @@ class potatobot { // TODO: Clean all of this and make it more modular, like put 
             upd_config.maintenance = true
             this.setName("FAQ | PotatoBot | Dev")
             fs.writeFileSync("./maintenancetoggle.json",JSON.stringify(upd_config,null,4))
-            return
+            return;
         }
 
         if (msg.content.toLowerCase().includes("off")) {
             upd_config.maintenance = false
             this.setName("FAQ | PotatoBot")
             fs.writeFileSync("./maintenancetoggle.json",JSON.stringify(upd_config,null,4))
-            return
+            return;
         }
-        return
+        return;
     }
 
-    get checkMaintenanceStatus() {
+    // apparently this is both a function and not a function and for some reason needs something that doesnt exist...
+    // great..................
+    get checkMaintenanceStatus() { // "'(' expected" WHRE IS IT EXPECTED, THERES NOTHING THAT NEEDS IT
         return JSON.parse(fs.readFileSync("./maintenancetoggle.json")).maintenance
     }
 
     async spambotChecker(msg) {
-            if (msg.channel.id !== this.config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
-            console.log(`Message sent in honeypot by ${msg.author.username}`)
+        if (msg.channel.id !== this.config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
+        console.log(`Message sent in honeypot by ${msg.author.username}`)
 
-            const usr = await bot.client.users.fetch(msg.member.id)
+        const usr = await bot.client.users.fetch(msg.member.id)
 
-            const embed = new EmbedBuilder()
-                .setTitle("Oops! You sent a message in the honeypot channel!")
-                .setDescription("If you don't remember doing this, you were either hacked or should change your passwords.")
-                .addFields(
-                    { name: "What do I do now?", value: "You can rejoin the server here! <invite link>"},
-                    { name: "The link tells me that it failed to join or that I am banned!", value: "Please make a report using the button below to submit an appeal and one of the developers or admins will find out what went wrong."}
-                )
-                //! CREATE MODMAIL SYSTEM!!!!! ALSO CHECK IF THIS ACTUALLY WORKS, DONT PUT THIS ON THE SERVER AS ITS ALL THEORY
-            usr.send({embeds:[embed]})
+        const embed = new EmbedBuilder()
+            .setTitle("Oops! You sent a message in the honeypot channel!")
+            .setDescription("If you don't remember doing this, you were either hacked or should change your passwords.")
+            .addFields(
+                { name: "What do I do now?", value: "You can rejoin the server here! <invite link>"},
+                { name: "The link tells me that it failed to join or that I am banned!", value: "Please make a report using the button below to submit an appeal and one of the developers or admins will find out what went wrong."}
+            )
+            //! CREATE MODMAIL SYSTEM!!!!! ALSO CHECK IF THIS ACTUALLY WORKS, DONT PUT THIS ON THE SERVER AS ITS ALL THEORY
+        usr.send({embeds:[embed]})
 
-            msg.member.ban({
-                reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
-                deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
-            }).then(async (member) => {
-                (await this.fetchServer()).members.unban(member.id) 
-            })
-    
+        msg.member.ban({
+            reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
+            deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
+        }).then(async (member) => {
+            (await this.fetchServer()).members.unban(member.id) 
+        })
+
     }
 
 }
