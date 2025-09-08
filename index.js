@@ -113,9 +113,10 @@ client.on(Events.MessageCreate, async (msg) => {
         msg.reply({embeds:[embed]})
         return
     }
-    if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return}
+    if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return} // if you ping the bot and put a space you can define on and off
+    // im putting this here because it was literally impossible to tell what this actually did
     
-    
+    // TODO: Clean up the command checking, preferably move it to a different class that extends from potatobot or smt idk
     if (maintainers.includes(msg.author.id) && msg.content.toLowerCase().includes("send latest commit")) {
         const last_commit = await pb.getBasicCommitInfo("SpacePotatoee","PotatoBot")
         pb.sendError(
@@ -127,10 +128,6 @@ client.on(Events.MessageCreate, async (msg) => {
         );
 
     }
-
-    const blocklist = JSON.parse(fs.readFileSync("./blocklist.json")) // just so you dont have to restart the bot every time someone blocks it
-    if (blocklist.includes(msg.author.id)) {return}
-    const filter = (m) => m.member.id === msg.member.id
 
     pb.faq(msg)
 });

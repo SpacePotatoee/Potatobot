@@ -13,7 +13,7 @@ const lastUpdated = require(lastUpdatedFilePath)
 
 let active_layer = ""
 
-class potatobot {
+class potatobot { // TODO: Clean all of this and make it more modular, like put the select option stuff in a dedicated file
 
     constructor (token,config) {
         this.token = token
@@ -41,7 +41,7 @@ class potatobot {
         console.log(Object.getPrototypeOf(this.getFaqLayer(layer)))
         let buffer = []
         const faq_layer = this.getFaqLayer(layer)
-        for (var i = 0; i < Object.keys(faq_layer).length; i++) { // 4:20GMT istfg if i have to do the most jank ass solution to get this to work
+        for (var i = 0; i < Object.keys(faq_layer).length; i++) {
             buffer.push({
                 label:(faq_layer[ Object.keys(faq_layer) [i] ].fields[0].name),
                 value:(Object.keys(faq_layer)[i].toString()) 
@@ -66,7 +66,7 @@ class potatobot {
             active_layer = ""
             return (this.liveConfig()).faq
         } else {
-            return eval("this.config.faq."+active_layer+".questions")
+            return eval("this.config.faq."+active_layer+".questions") //! fix this
         }
     }
 
@@ -163,10 +163,6 @@ class potatobot {
             .addComponents(this.createButton("Back to Home", "Secondary", "home"))
         const selector_last_element = new ActionRowBuilder()
             .addComponents(this.createSelectMenu(layer))
-        const block = new ButtonBuilder()
-            .setLabel("Block")
-            .setCustomId("block")
-            .setStyle("Danger")
         switch (active_layer) {
             default:
                 return [another_row, selector_last_element]
@@ -218,31 +214,6 @@ class potatobot {
         setTimeout(() => {response.delete()}, timeout)
         collector.on('collect', async (i) => {
             const live_config = JSON.parse(fs.readFileSync("./config.json"))
-            if (i.customId === "block") {
-                let blocklist = JSON.parse(fs.readFileSync("./blocklist.json"))
-                if (blocklist.includes(i.user.id)) {
-
-                    const embed = new EmbedBuilder()
-                    .setTitle("You have already blocked this bot")
-                    .setColor(0xFF0000)
-                    .setThumbnail(live_config.links.embed_image)
-                    .setFooter({text:"You can unblock yourself using !unblock"})
-                    i.update({embeds:[embed], ephemeral: true})
-                    return
-                }
-                blocklist.push(i.user.id)
-                fs.writeFileSync("./blocklist.json", JSON.stringify(blocklist, null, 4))
-                pb.sendError("user added to blocklist",i.user.id,0x0000FF)
-                const embed = new EmbedBuilder()
-                    .setTitle("Added to block-list")
-                    .setColor(0xFF0000)
-                    .setThumbnail(live_config.links.embed_image)
-                    .setDescription("What does this mean? It means that if you say something in my filter; I wont reply to you.")
-                    .setFooter({text:"You can unblock yourself using !unblock"})
-                    i.update({embeds:[embed], ephemeral: true})
-                    
-                return
-            }
 
             if (i.customId === "issues") {
                 const embed = new EmbedBuilder()
@@ -421,7 +392,7 @@ class potatobot {
      * @returns boolean
      */
     filterCheck(message) {
-        const live_config = JSON.parse(fs.readFileSync("./config.json"))
+        const live_config = this.liveConfig()
         for (var i = 0; i < live_config.main_filter.length; i++) {
             if (message.content.toLowerCase().includes(live_config.main_filter[i])) {
                 console.log(`${message.author.username} said ${live_config.main_filter[i]}`)
@@ -506,7 +477,7 @@ class potatobot {
 
     maintenanceMode(msg) {
 
-        if (!maintainers.includes(msg.author.id)) {return}
+        if (!maintainers.includes(msg.author.id)) {return} // if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return} is the worst code ever
 
         let upd_config = JSON.parse(fs.readFileSync("./maintenancetoggle.json"))
         
@@ -530,10 +501,22 @@ class potatobot {
         return JSON.parse(fs.readFileSync("./maintenancetoggle.json")).maintenance
     }
 
-    spambotChecker(msg) {
+    async spambotChecker(msg) {
             if (msg.channel.id !== this.config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
             console.log(`Message sent in honeypot by ${msg.author.username}`)
-    
+
+            const usr = await bot.client.users.fetch(msg.member.id)
+
+            const embed = new EmbedBuilder()
+                .setTitle("Oops! You sent a message in the honeypot channel!")
+                .setDescription("If you don't remember doing this, you were either hacked or should change your passwords.")
+                .addFields(
+                    { name: "What do I do now?", value: "You can rejoin the server here! <invite link>"},
+                    { name: "The link tells me that it failed to join or that I am banned!", value: "Please make a report using the button below to submit an appeal and one of the developers or admins will find out what went wrong."}
+                )
+                //! CREATE MODMAIL SYSTEM!!!!! ALSO CHECK IF THIS ACTUALLY WORKS, DONT PUT THIS ON THE SERVER AS ITS ALL THEORY
+            usr.send({embeds:[embed]})
+
             msg.member.ban({
                 reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
                 deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
