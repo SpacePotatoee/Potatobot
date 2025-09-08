@@ -13,7 +13,8 @@ const token = require("./token.json")
 //Who to send error reports to
 const maintainers = require("./maintainers.json")
 
-const {potatobot} = require("./potatobot"); const pb = new potatobot(token,config)
+const {Potatobot} = require("./potatobot.js"); const pb = new Potatobot(token,config)
+const {Github} = require("./modules/github.js"); const git = new Github()
 
 const client = new Client(
     {intents: [
@@ -29,10 +30,12 @@ const client = new Client(
 )
 module.exports.client = client
 
-pb.loadCommands(token["Bot"])
+//pb.loadCommands(token["Bot"])
 
 //Welcome
 pb.welcomer()
+
+pb.spambotChecker()
 
 //#region Message Detection
 client.on(Events.MessageCreate, async (msg) => {
@@ -73,7 +76,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 client.on(Events.MessageCreate, async (msg) => {
     if (msg.author.bot) return
-    pb.spambotChecker(msg)
+    
     if ((msg.content.includes("<@1360807782001148134>")||msg.content.toLowerCase().includes("potatobot")) && (msg.content.toLowerCase().includes("sucks")||msg.content.toLowerCase().includes("i hate")||msg.content.toLowerCase().includes("is bad")||msg.content.toLowerCase().includes("is ass")||msg.content.toLowerCase().includes("beat our child")||msg.content.toLowerCase().includes("disown"))) {
         msg.react("😢")
         msg.react("🫃")
@@ -86,28 +89,22 @@ client.on(Events.MessageCreate, async (msg) => {
             .setTitle("PotatoBot is currently under maintenance.")
             .setDescription("PotatoBot is either undergoing development or being patched, please try again later")
             .setColor(0xFF1111)
-        msg.reply({embeds:[embed]});
-        return;
+        msg.reply({embeds:[embed]})
+        return
     }
-    if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return} // if you ping the bot and put a space you can define on and off
-    // im putting this here because it was literally impossible to tell what this actually did
+    if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return}
     
-    // TODO: Clean up the command checking, preferably move it to a different class that extends from potatobot or smt idk
+    
     if (maintainers.includes(msg.author.id) && msg.content.toLowerCase().includes("send latest commit")) {
         const last_commit = await pb.getBasicCommitInfo("SpacePotatoee","PotatoBot")
+        pb.sendError(
+            "New Commit",
+            `>>> Commit Author: ${last_commit.author}
+            Commit Date: ${last_commit.date}
+            Commit Message: ${last_commit.message}`,
+            0x023bb5
+        );
 
-        const embed = new EmbedBuilder() // this is just better imo, becau
-            .setTitle("Latest Commit")
-            .setDescription(
-                `>>> Commit Author: ${last_commit.author}
-                Commit Date: ${last_commit.date}
-                Commit Message: ${last_commit.message}`
-            )
-            .setTimestamp()
-            .setColor(0x023bb5)
-        
-        msg.reply({embeds:[embed]})
-        return; // why wasnt there a return statement here?
     }
 
     pb.faq(msg)
@@ -135,7 +132,7 @@ process.on("uncaughtException", (e) => {
 client.login(token["Bot"])
 client.on(Events.ClientReady, async () => {
     console.log("started");
-    const last_commit = await pb.getBasicCommitInfo("SpacePotatoee","PotatoBot")
+    const last_commit = await git.getBasicCommitInfo("SpacePotatoee","PotatoBot")
     pb.sendError(
         "Started PotatoBot",
         `__**Latest Commit**__

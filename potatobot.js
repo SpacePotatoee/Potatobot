@@ -8,529 +8,105 @@ const {ButtonBuilder, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder, R
 const fs = require("node:fs")
 const maintainers = require("./maintainers.json")
 
-const lastUpdatedFilePath = "./last_updated.json"
-const lastUpdated = require(lastUpdatedFilePath)
 
-let active_layer = ""
+const {Faq} = require("./modules/faq.js"); const faq = new Faq()
+const {Utils} = require("./modules/utils.js"); const util = new Utils()
 
-class potatobot { // TODO: Clean all of this and make it more modular, like put the select option stuff in a dedicated file
+const {Channels} = require("./modules/channels.js"); const channels = new Channels("./last_updated.json")
+
+
+class Potatobot {
 
     constructor (token,config) {
         this.token = token
         this.config = config
     }
     
-    async fetchServer() {
-        return await bot.client.guilds.fetch("1251520688569974914")
-    }
-
     /**
-     * Sets PotatoBots nickname
-     * @param {string} name 
-     */
-    async setName(name) {
-        //const server = await (await (await bot.client.guilds.fetch("1251520688569974914")).members.fetch("1360807782001148134")).setNickname(name)
-        (await (await bot.client.guilds.fetch("1251520688569974914")).members.fetch("1360807782001148134")).setNickname(name)
-    }
-
-    /**
-     * Returns an object to create the select options
-     * @returns object
-     */
-    createSelectOptions(layer) {
-        console.log(Object.getPrototypeOf(this.getFaqLayer(layer)))
-        let buffer = []
-        const faq_layer = this.getFaqLayer(layer)
-        for (var i = 0; i < Object.keys(faq_layer).length; i++) {
-            buffer.push({
-                label:(faq_layer[ Object.keys(faq_layer) [i] ].fields[0].name),
-                value:(Object.keys(faq_layer)[i].toString()) //! fix this mess, why is it so bad. actually cannot read what any of this does, couldve made it into seperate little functions or a class
-            })
-        }
-
-        return buffer
-    }
-    
-
-    /**
-     * Pass the name of the mod that is in the FAQ and then return its path
-     * @param {string} layer 
-     * @returns string - JSON PATH
-     */
-    getFaqLayer(layer) {
-        if (Object.keys((this.liveConfig()).faq).includes(layer)) {
-            active_layer = layer
-        }
-
-        if (layer === undefined) {
-            active_layer = ""
-            return (this.liveConfig()).faq
-        } else {
-            return eval("this.config.faq."+active_layer+".questions") //! fix this
-        }
-    }
-
-    /**
-     * Loads the interactions into the bot
-     * @param {String} token 
-     */
-    loadCommands() {
-        bot.client.commands = new Collection()
-
-        const commands = [];
-        const commandFuncs = {};
-        const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js') && file !== "template.js"); // ignore the template command
-        const commandsEnabled = true;
-        // bot client id needed here
-        const clientId = "1360807782001148134"
-
-        // load commands into discord
-        if (commandsEnabled) {
-
-            for (const file of commandFiles) {
-                const command = require(`./commands/${file}`);
-                console.log(file, command)
-                commands.push(command.data.toJSON());
-                commandFuncs[command.data.name] = (command.func)
-            }
-        }
-
-        const rest = new REST({ version: '10' }).setToken(this.token["Bot"]);
-
-        try {
-            rest.put(
-                Routes.applicationCommands(clientId),
-                { body: commands },
-            );
-        } catch (e) {
-            console.error(e)
-        }
-
-        // Create the slash commands
-        bot.client.on('interactionCreate', async interaction => {
-            if (!interaction.isChatInputCommand()) return;
-            commandFuncs[interaction.commandName](interaction)
-        });
-    }
-
-    createSelectMenu(layer) {
-        return (new StringSelectMenuBuilder()
-            .setCustomId('faq')
-            .setPlaceholder('Select a Question')
-            .setOptions(this.createSelectOptions(layer)))
-    }
-    
-    /**
-     * Creates a button with the selected parameters. When creating a link button pass "customId" as null and when not then ignore the url arg
-     * @param {string} label 
-     * @param {string} style 
-     * @param {string} customId 
-     * @param {string} URL 
-     * @returns Button
-     */
-    createButton(label, style, customId, URL) {
-        if (style === "Link") {
-            return (
-                new ButtonBuilder()
-                    .setLabel(label)
-                    .setURL(URL)
-                    .setStyle(style)
-            )
-        }
-        return (
-            new ButtonBuilder()
-                .setLabel(label)
-                .setCustomId(customId)
-                .setStyle(style)
-        )
-    }
-
-
-    /**
-     * Use this to create a hotloading config instance
-     * @returns JSON - Live Updating Config File
-     */
-    liveConfig() {
-        return JSON.parse(fs.readFileSync("./config.json"))
-    }
-
-    /**
-    * Creates the buttons for the corresponding mod FAQ
-    * @param {string} layer 
-    */
-    createActionRow(layer) {
-        const another_row = new ActionRowBuilder()
-            .addComponents(this.createButton("Back to Home", "Secondary", "home"))
-        const selector_last_element = new ActionRowBuilder()
-            .addComponents(this.createSelectMenu(layer))
-        switch (active_layer) {
-            default:
-                return [another_row, selector_last_element]
-            case "found_footage":
-                const row = new ActionRowBuilder()
-                    .addComponents(
-                        //this.createButton("KNOWN ISSUES", "Primary", "issues"), 
-                        this.createButton("Backrooms Wiki", "Link", null, this.config.links.wiki),
-                        this.createButton("Use Mac?", "Link", null, this.config.links.wiki_mac),
-                        this.createButton("Video Tutorial", "Link", null, this.config.links.wiki_install),
-                        //block
-                    )
-                return [row, another_row, selector_last_element]
-
-            case "some_mod":
-                return [another_row, selector_last_element]
-        }
-
-        // const row = new ActionRowBuilder()
-        //     .addComponents(issues, wiki, mac_not_working, tutorial, block)
-
-        // const row2 = new ActionRowBuilder()
-        //     .addComponents(this.createSelectMenu(layer))
-        
-    }
-
-    /**
-     * Sends the FAQ to the Found Footage mod
+     * Sends the FAQ selector
      * @param {Message} Input the message class
      */
-    async faq(msg) {
-        const live_config = JSON.parse(fs.readFileSync("./config.json"))
-        
-        const embed = new EmbedBuilder()
-            .setColor(0xFFCC00)
-            .setThumbnail(live_config.links.embed_image)
-            .setTitle("Frequently Asked Questions")
-            .addFields(
-                { name:"What can I find here?", value:"You can find links to very important info below at all times.\nPlease select the desired mod below. Go back to this page by clicking \"Back to Home\""}
-            )
-        const response = await msg.reply({
-            embeds: [embed] ,
-            components: this.createActionRow(),
-            withResponse: true,
-            ephemeral: true
-        });
-        const timeout = 1200_000
-        const collector = response.createMessageComponentCollector({time: timeout}); //add filter 
-        setTimeout(() => {response.delete()}, timeout)
-        collector.on('collect', async (i) => {
-            const live_config = JSON.parse(fs.readFileSync("./config.json"))
-
-            if (i.customId === "issues") {
-                const embed = new EmbedBuilder()
-                    .setTitle("Frequently Asked Questions")
-                    .setColor(0xFFCC00)
-                    .setThumbnail(live_config.links.embed_image)
-                    .addFields(live_config.faq.important_note.fields)
-                    .setFooter({text:"Click \"block\" if you dont want to see this anymore"})
-                i.update({embeds:[embed], components:[row,row2], ephemeral: true})
-                return
-            }
-
-            if (i.customId === "home") {
-                i.update({
-                    embeds: [embed] ,
-                    components: this.createActionRow(),
-                    withResponse: true,
-                    ephemeral: true
-                })
-            }
-
-            if (i.customId === "faq") {
-                const selection = i.values[0];
-                console.log(selection)
-                try {
-
-                    const row = this.createActionRow(selection)
-                    console.log(active_layer)
-                    console.log(selection)
-                    let field_path = ".fields"
-                    let image_path = ".image"
-                    if ((active_layer !== "") && selection !== active_layer) {
-                        field_path = ".questions."+selection+".fields" //! dont touch this or else the entire bot will break
-                        image_path = ".questions."+selection+".image"  // i do not even know how this works anymore, just if we need to change the scheme for anything then its gonna suck
-                    }
-                    console.log([field_path, image_path])
-                    //console.log(Object.keys(eval("live_config.faq."+selection+".questions.fields")))
-                    const embed = new EmbedBuilder()
-                        .setTitle("Frequently Asked Questions")
-                        .setColor(0xFFCC00)
-                        // .setThumbnail(live_config.links.embed_image)
-                        .addFields(eval("live_config.faq."+active_layer+field_path))
-                        .setFooter({text:"Click \"block\" if you dont want to see this anymore"})
-                        .setImage(eval("live_config.faq."+active_layer+image_path) ?? null)
-                    i.update({embeds:[embed], components:row, ephemeral: true})
-                } catch (e) {
-                    console.log(e)
-                }
-            }
-        })
+    faq(msg) {
+        faq.faq(msg)
     }
-    
-    /**
-     * Detects when a member joins and sends a welcome message
-     */
-    welcomer() {
-        bot.client.on('guildMemberAdd', async (member) => {
-            if(member.bot) return;
-            if(this.checkMaintenanceStatus === true) return;
-
-            console.log(member.displayName + " joined the server!");
-            const server = member.guild;
-            const welcomeChannel = server.systemChannel;
-            const rulesChannel = server.rulesChannel;
-            
-            let newUserCount = server.memberCount.toString();
-            let countString = "";
-            
-            switch (newUserCount.charAt(newUserCount.length - 1)) {
-                case '1':
-                    countString = "st";
-                    break;
-                case '2':
-                    countString = "nd";
-                    break;
-                case '3':
-                    countString = "rd";
-                    break;
-                default:
-                    countString = "th";
-                    break;
-            }
-        
-            newUserCount = newUserCount + countString;
-        
-            const embed = new EmbedBuilder()
-                .setColor(0xFFCC00)
-                .setTitle("Welcome " + member.displayName + " to the Space Fries Discord!")
-                .setThumbnail(member.user.avatarURL())
-                .addFields(
-                    { name:"Make sure to check out the " + rulesChannel.url + " first", value: "You are the " + newUserCount + " member to join the server"}
-                )
-        
-            welcomeChannel.send({
-                content: "<@" + member.user.id + ">",
-                embeds: [embed]
-            });
-        })
-    }
-
-    /**
-     * Automatically sends a message in the Mod Updates channel whenever one of my mods gets updated
-     */
-    async modUpdater() {
-        const server = await this.fetchServer();
-        const channel = await server.channels.fetch("1411241734817714186");
-
-        //Get all my projects
-        const projectsListFetch = await fetch("https://api.modrinth.com/v2/user/MXe82l5E/projects", {
-            method: "GET",
-            headers: {
-                "Authorization": this.token["Modrinth"]
-            }
-        })
-        const projectsList = await projectsListFetch.json();
-
-
-        //Read when each project was last updated
-        fs.readFile(lastUpdatedFilePath, 'utf-8', async (err, data) => {
-            if (err) {
-                console.error("Error: ", err)
-                return
-            }
-
-            let shouldWrite = false
-            let jsonData = JSON.parse(data)
-
-            //For each project in the projects list
-            for (let i = 0; i < projectsList.length; i++) {
-                //If it should update
-                if (i >= lastUpdated.length || jsonData[projectsList[i]["id"]] !== projectsList[i]["updated"]) {
-                    let numOfVersions = projectsList[i]["versions"]
-                    let latestVersionID = projectsList[i]["versions"][numOfVersions.length - 1]
-
-                    //Get the latest version
-                    let latestVersionFetch = await fetch("https://api.modrinth.com/v2/version/" + latestVersionID, {
-                        method: "GET",
-                        headers: {
-                            "Authorization": this.token["Modrinth"]
-                        }
-                    })
-                    let latestVersion = await latestVersionFetch.json();
-
-                    //Send the message
-                    let embed = new EmbedBuilder()
-                        .setTitle(latestVersion["name"])
-                        .setDescription("Changelog:\n" + latestVersion["changelog"])
-                        .setColor(projectsList[i]["color"])
-                        .setThumbnail(projectsList[i]["icon_url"])
-                    let msg = await channel.send({
-                        content: "<@&1411245664821575680> \n" + "https://modrinth.com/mod/" + projectsList[i]["slug"] + "/version/" + latestVersionID,
-                        embeds: [embed],
-                        ephemeral: true
-                    })
-                    await msg.crosspost()
-                    console.log("Created new project update message")
-
-                    //Update the file
-                    jsonData[projectsList[i]["id"]] = projectsList[i]["updated"]
-                    shouldWrite = true;
-                }
-            }
-
-            if (shouldWrite) {
-                let updatedData = JSON.stringify(jsonData);
-                await fs.writeFile("./last_updated.json", updatedData, 'utf-8', err => {
-                    console.log("Updated the last_updated.json file")
-                })
-            }
-        })
-    }
-
+  
     /**
      * Checks if a message contains ANY phrase in config.main_filter
      * @param {Message} message 
      * @returns boolean
      */
     filterCheck(message) {
-        const live_config = this.liveConfig()
-        for (var i = 0; i < live_config.main_filter.length; i++) {
-            if (message.content.toLowerCase().includes(live_config.main_filter[i])) {
-                console.log(`${message.author.username} said ${live_config.main_filter[i]}`)
-                return true
-            }
-        }
-        return false
+        util.filterCheck(message)
+    }
+    
+    /**
+     * Automatically sends a message in the Mod Updates channel whenever one of my mods gets updated
+     */
+    modUpdater() {
+        channels.modUpdater()
     }
 
     /**
      * Returns SpacePotato's subscriber count and assigns to specified channel
      * @param {string} token 
      */
-    async getSubscriberCount() {
-        const server = await this.fetchServer();
-        const channel = await server.channels.fetch("1382364642499887195");
+    getSubscriberCount() {
+        channels.getSubscriberCount()
+    }
 
-        const result = await fetch('https://www.googleapis.com/youtube/v3/channels?key='+this.token["YouTube"]+'&part=statistics&forHandle=SpacePotatoee');
-        const text = await result.json();
+    spambotChecker() {
+        channels.spambotChecker()
+    }
 
-        let subCount = text['items'][0]['statistics']['subscriberCount'];
-        let slicedCount = subCount.slice(0, -2);
-        let finalCount = slicedCount.slice(0, -1) + '.' + slicedCount.slice(-1) + 'K';
-        
-        await channel.setName('🎉︱Subscribers: ' + finalCount);
-        
-        console.log("Updated the sub count to " + finalCount);
+    sendError(code, error, color) {
+        util.sendError(code, error, color)
+    }
+
+    /**
+     * Detects when a member joins and sends a welcome message
+     */
+    welcomer() {
+        channels.welcomer()
     }
 
     /**
      * Sets a random status for potatobot.
      */
     setRandomStatus() {
-        bot.client.user.setActivity("Ping for FAQ | "+this.config.status[Math.floor(Math.random()*this.config.status.length)])
+        util.setRandomStatus()
     }
 
-    async sendError(code, error, color) {
-    for(let i = 0; i < maintainers.length; i++){
-        const maintainer = await bot.client.users.fetch(maintainers[i])
+    maintenanceMode(msg) { // cba moving this, just gonna keep it here for now
 
-        const embed = new EmbedBuilder()
-            .setTitle(code)
-            .setDescription(`${error}`)
-            .setTimestamp()
-            .setColor(color)
-        
-        maintainer.send({embeds:[embed]})
-    }
-    }
-
-    /**
-     * Makes an API Request to github to pull commit info and returns the latest info
-     * @param {String} RepoName Needs repository name in form of string
-     * @param {String} RepoOwner Needs repository owner in form of string
-     * 
-     * @returns JSON as PROMISE
-     */
-    async githubApiReqCommit(RepoOwner, RepoName) {
-        const temp = await fetch(`https://api.github.com/repos/${RepoOwner}/${RepoName}/commits?per_page=1`)
-
-        return temp.json()
-        
-    }
-    
-    /**
-     * Returns basic info from the APIReq function
-     * @param {String} RepoName Needs repository name in form of string
-     * @param {String} RepoOwner Needs repository owner in form of string
-     * 
-     * @returns JSON
-     */
-    async getBasicCommitInfo(RepoOwner, RepoName) {
-        const commit_temp = await this.githubApiReqCommit(RepoOwner, RepoName) // idk what to call it but its the parents info, gets the repo commit data and caches it
-        
-        let latest_commit = {
-            "author":commit_temp[0].commit.author.name,
-            "date":new Date(commit_temp[0].commit.author.date).toUTCString(),
-            "message":commit_temp[0].commit.message,
-        }
-        return latest_commit
-    }
-
-    maintenanceMode(msg) {
-
-        if (!maintainers.includes(msg.author.id)) {return} // if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return} is the worst code ever
+        if (!maintainers.includes(msg.author.id)) {return}
 
         let upd_config = JSON.parse(fs.readFileSync("./maintenancetoggle.json"))
         
         if (msg.content.toLowerCase().includes("on")) {
             upd_config.maintenance = true
-            this.setName("FAQ | PotatoBot | Dev")
+            util.setName("Under Development")
             fs.writeFileSync("./maintenancetoggle.json",JSON.stringify(upd_config,null,4))
-            return;
+            return
         }
 
         if (msg.content.toLowerCase().includes("off")) {
             upd_config.maintenance = false
-            this.setName("FAQ | PotatoBot")
+            util.setName("FAQ | PotatoBot")
             fs.writeFileSync("./maintenancetoggle.json",JSON.stringify(upd_config,null,4))
-            return;
+            return
         }
-        return;
+        return
     }
 
-    // apparently this is both a function and not a function and for some reason needs something that doesnt exist...
-    // great..................
-    get checkMaintenanceStatus() { // "'(' expected" WHRE IS IT EXPECTED, THERES NOTHING THAT NEEDS IT
+    get checkMaintenanceStatus() {
         return JSON.parse(fs.readFileSync("./maintenancetoggle.json")).maintenance
     }
 
-    async spambotChecker(msg) {
-        if (msg.channel.id !== this.config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
-        console.log(`Message sent in honeypot by ${msg.author.username}`)
-
-        const usr = await bot.client.users.fetch(msg.member.id)
-
-        const embed = new EmbedBuilder()
-            .setTitle("Oops! You sent a message in the honeypot channel!")
-            .setDescription("If you don't remember doing this, you were either hacked or should change your passwords.")
-            .addFields(
-                { name: "What do I do now?", value: "You can rejoin the server here! <invite link>"},
-                { name: "The link tells me that it failed to join or that I am banned!", value: "Please make a report using the button below to submit an appeal and one of the developers or admins will find out what went wrong."}
-            )
-            //! CREATE MODMAIL SYSTEM!!!!! ALSO CHECK IF THIS ACTUALLY WORKS, DONT PUT THIS ON THE SERVER AS ITS ALL THEORY
-        usr.send({embeds:[embed]})
-
-        msg.member.ban({
-            reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
-            deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
-        }).then(async (member) => {
-            (await this.fetchServer()).members.unban(member.id) 
-        })
-
-    }
+    
 
 }
 
 //
 
 
-module.exports.potatobot = potatobot
+module.exports.Potatobot = Potatobot
