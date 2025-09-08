@@ -70,7 +70,7 @@
                             "value": "A fix that has worked for some people is setting the port in the config to -1, or by downloading this specific version https://cdn.modrinth.com/data/9eGKb6K1/versions/8vW48Tnj/voicechat-fabric-1.20.1-2.5.36.jar"
                         }
                     ]
-                }
+                },
                 "graphics": {
                     "fields": [
                         {

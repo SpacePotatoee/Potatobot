@@ -78,31 +78,7 @@ client.on(Events.MessageCreate, async (msg) => {
         msg.react("😢")
         msg.react("🫃")
     }
-    // TODO: Remove all of this or make it a compact function
-    if (msg.content.toLowerCase() === "!unblock") {
-        const live_config = JSON.parse(fs.readFileSync("./config.json"))
-        let blocklist = JSON.parse(fs.readFileSync("./blocklist.json"))
-        if (blocklist.includes(msg.author.id)) {
-
-            blocklist.splice(blocklist.indexOf(msg.author.id),1)
-            fs.writeFileSync("./blocklist.json", JSON.stringify(blocklist, null, 4))
-            pb.sendError("User removed from blocklist",msg.author.id,0x0000FF)
-            const embed = new EmbedBuilder()
-            .setTitle("You have unblocked this bot")
-            .setColor(0x00FF00)
-            .setThumbnail(live_config.links.embed_image)
-            msg.reply({embeds:[embed], ephemeral: true})
     
-            return
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle("You have not blocked this bot")
-            .setColor(0xFF0000)
-            .setThumbnail(live_config.links.embed_image)
-            msg.reply({embeds:[embed], ephemeral: true})
-    }
-
     if (pb.filterCheck(msg) === false) {return}
 
     if ((pb.checkMaintenanceStatus === true) && !maintainers.includes(msg.author.id)) {
@@ -110,8 +86,8 @@ client.on(Events.MessageCreate, async (msg) => {
             .setTitle("PotatoBot is currently under maintenance.")
             .setDescription("PotatoBot is either undergoing development or being patched, please try again later")
             .setColor(0xFF1111)
-        msg.reply({embeds:[embed]})
-        return
+        msg.reply({embeds:[embed]});
+        return;
     }
     if (msg.content.includes(" ")) {pb.maintenanceMode(msg); return} // if you ping the bot and put a space you can define on and off
     // im putting this here because it was literally impossible to tell what this actually did
@@ -119,14 +95,19 @@ client.on(Events.MessageCreate, async (msg) => {
     // TODO: Clean up the command checking, preferably move it to a different class that extends from potatobot or smt idk
     if (maintainers.includes(msg.author.id) && msg.content.toLowerCase().includes("send latest commit")) {
         const last_commit = await pb.getBasicCommitInfo("SpacePotatoee","PotatoBot")
-        pb.sendError(
-            "New Commit",
-            `>>> Commit Author: ${last_commit.author}
-            Commit Date: ${last_commit.date}
-            Commit Message: ${last_commit.message}`,
-            0x023bb5
-        );
 
+        const embed = new EmbedBuilder() // this is just better imo, becau
+            .setTitle("Latest Commit")
+            .setDescription(
+                `>>> Commit Author: ${last_commit.author}
+                Commit Date: ${last_commit.date}
+                Commit Message: ${last_commit.message}`
+            )
+            .setTimestamp()
+            .setColor(0x023bb5)
+        
+        msg.reply({embeds:[embed]})
+        return; // why wasnt there a return statement here?
     }
 
     pb.faq(msg)
