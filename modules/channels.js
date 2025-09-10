@@ -156,15 +156,15 @@ class Channels {
 
     spambotChecker() {
         bot.client.on("messageCreate", (msg) => {
-            if (msg.channel.id !== config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
+            if (msg.channel.id !== config.honeypot_channel || msg.author.bot) return; // check if the message was posted originally in the honeypot channel
             console.log(`Message sent in honeypot by ${msg.author.username}`)
 
-            msg.member.ban({
-                reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
-                deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
-            }).then(async (member) => {
-                (await util.fetchServer()).members.unban(member.id) 
-            })
+            // msg.member.ban({
+            //     reason: "You have sent a message in the honeypot channel to detect spambots. To delete the recent messages you will be banned and then unbanned (serving as a kick)",
+            //     deleteMessageSeconds: 60 * 5 // delete every message from the past 5 minutes
+            // }).then(async (member) => {
+            //     (await util.fetchServer()).members.unban(member.id)
+            // })
         })
     }
 }
