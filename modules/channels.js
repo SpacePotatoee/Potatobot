@@ -1,6 +1,7 @@
 const bot = require("../index.js")
 const fs = require("node:fs")
 const token = require("../token.json")
+const config = require("../config.json")
 
 const {Utils} = require("./utils.js"); const util = new Utils()
 
@@ -155,7 +156,7 @@ class Channels {
 
     spambotChecker() {
         bot.client.on("messageCreate", (msg) => {
-            if (msg.channel.id !== util.fetchServer().honeypot_channel) return; // check if the message was posted originally in the honeypot channel
+            if (msg.channel.id !== config.honeypot_channel) return; // check if the message was posted originally in the honeypot channel
             console.log(`Message sent in honeypot by ${msg.author.username}`)
 
             msg.member.ban({

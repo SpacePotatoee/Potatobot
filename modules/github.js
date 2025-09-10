@@ -2,9 +2,6 @@ const bot = require("../index.js")
 const fs = require("node:fs")
 
 class Github {
-    constructor(config) {
-        this.config = config
-    }
 
     /**
      * Makes an API Request to github to pull commit info and returns the latest info
