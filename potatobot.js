@@ -36,7 +36,7 @@ class Potatobot {
      * @returns boolean
      */
     filterCheck(message) {
-        util.filterCheck(message)
+        return util.filterCheck(message)
     }
     
     /**

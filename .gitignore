@@ -14,6 +14,7 @@ lerna-debug.log*
 token.json
 maintainers.json
 maintenancetoggle.json
+last_updated.json
 
 # Environment variables
 .env

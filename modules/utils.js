@@ -88,7 +88,7 @@ class Utils {
         const live_config = JSON.parse(fs.readFileSync("./config.json"))
         for (var i = 0; i < live_config.main_filter.length; i++) {
             if (message.content.toLowerCase().includes(live_config.main_filter[i])) {
-                console.log(`${message.author.username} said ${live_config.main_filter[i]}`)
+                console.log(`${message.author.username} said ${message.content}`)
                 return true
             }
         }

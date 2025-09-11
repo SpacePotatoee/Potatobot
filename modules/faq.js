@@ -17,7 +17,7 @@ class Faq {
      * @returns object
      */
     createSelectOptions(layer) {
-        console.log(Object.getPrototypeOf(this.getFaqLayer(layer)))
+        //console.log(Object.getPrototypeOf(this.getFaqLayer(layer)))
         let buffer = []
         const faq_layer = this.getFaqLayer(layer)
         for (var i = 0; i < Object.keys(faq_layer).length; i++) { // 4:20GMT istfg if i have to do the most jank ass solution to get this to work
