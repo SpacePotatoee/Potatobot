@@ -85,7 +85,7 @@ class Utils {
      * @returns boolean
      */
     filterCheck(message) {
-        const live_config = JSON.parse(fs.readFileSync("./config.json"))
+        const live_config = JSON.parse(fs.readFileSync("./config/config.json"))
         for (var i = 0; i < live_config.main_filter.length; i++) {
             if (message.content.toLowerCase().includes(live_config.main_filter[i])) {
                 console.log(`${message.author.username} said ${live_config.main_filter[i]}`)
