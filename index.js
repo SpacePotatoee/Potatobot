@@ -74,7 +74,7 @@ client.on(Events.MessageCreate, async (message) => {
     }
 })
 
-client.on(Events.MessageCreate, async (msg) => {
+client.on("messageCreate", async (msg) => {
     if (msg.author.bot || msg.channel.id === config.honeypot_channel) return
     
     if ((msg.content.includes("<@1360807782001148134>")||msg.content.toLowerCase().includes("potatobot")) && (msg.content.toLowerCase().includes("sucks")||msg.content.toLowerCase().includes("i hate")||msg.content.toLowerCase().includes("is bad")||msg.content.toLowerCase().includes("is ass")||msg.content.toLowerCase().includes("beat our child")||msg.content.toLowerCase().includes("disown"))) {
@@ -154,3 +154,4 @@ client.on(Events.ClientReady, async () => {
 })
 
 module.exports.client = client
+
