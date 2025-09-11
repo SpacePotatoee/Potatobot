@@ -53,7 +53,7 @@ client.on(Events.MessageCreate, async (msg) => {
 
 client.on(Events.MessageCreate, async (message) => {
     
-    if (message.author.bot || msg.channel.id === config.honeypot_channel) return
+    if (message.author.bot || message.channel.id === config.honeypot_channel) return
     if (message.author.id.includes("721640105307275315") && message.content.toLowerCase().includes("linux")) {
         const linux = [
             "https://cdn.discordapp.com/attachments/1156304119313748010/1360535401164570624/caption.gif?ex=680d4515&is=680bf395&hm=6f04b4ee59a0e103bc272d1799d42e5c4993a732932c39997a3ba9f9a991c3aa&",
