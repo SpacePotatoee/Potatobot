@@ -229,8 +229,8 @@
         "some_mod":{
             "fields":[
                 {
-                    "name":"__**[UPCOMING MOD] FAQ PAGE**__",
-                    "value":"Here are the frequently asked questions about the [UPCOMING MOD], please select an option below\n Go back to the start by clicking \"Back to Home\""
+                    "name":"__**DESTROYING MINECRAFT FAQ PAGE**__",
+                    "value":"Here are the frequently asked questions about the Destroying Minecraft mod, please select an option below\n Go back to the start by clicking \"Back to Home\""
                 }
             ],
             "questions":{
@@ -238,7 +238,7 @@
                     "fields": [
                         {
                             "name": "Known Issues",
-                            "value": "Below is a list of known issues with this mod (if youre seeing what looks like placeholder text after the mod releases then raine probably forgot her/their/his job)"
+                            "value": "Below is a list of known issues with this mod (12:54gmt 6/10/25 \"cba doing this on mobile will do later maybe\")"
                         },
                         {
                             "name": "- Known Solvable Issues",
@@ -254,7 +254,7 @@
                     "fields": [
                         {
                             "name": "Mod Dependencies",
-                            "value": "blablabla fabric if youre seeing this then this needs to be replaced"
+                            "value": "Fabric 1.21.1\nSodium is recommended\nIRIS OR ANY SHADER MOD IS INCOMPATIBLE"
                         }
                     ]
                 },
